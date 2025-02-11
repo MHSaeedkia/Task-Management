@@ -1,0 +1,12 @@
+SERVICE_IP : "localhost"
+SERVICE_PORT : 3000
+
+
+# Rate Limmit 
+IGNORE_IP : "127.0.0.2"
+MAX_REQUEST : 2
+EXPIRATION_TIME : 30
+
+# Autentication
+AUT_KEY : "X-API-Key"
+AUT_PASS : "12345"

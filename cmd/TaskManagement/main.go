@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"Task-Management/cmd"
+	"log"
+)
 
 func main() {
-	fmt.Println("Task")
+	log.Fatal(cmd.Run())
 }

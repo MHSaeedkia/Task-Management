@@ -1,29 +1,32 @@
 package gateway
 
 import (
+	"Task-Management/config"
 	"Task-Management/internal/gateway/handler"
+	"Task-Management/internal/gateway/middleware"
+	"Task-Management/internal/logger"
 	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Run(serviceIp, servicePort string) {
-	// handler1 := handler.NewHandler()
+func Run(config *config.Config) {
+	handler := handler.NewHandler()
 
 	app := fiber.New()
 
 	// Start logging goroutine
-
-	// handler.Wg.Add(1)
-	// go func(handler handler.Handler) {
-	// 	defer wg.Done()
-	// 	logTasks(taskChan)
-	// }(handler)
+	handler.Wg.Add(1)
+	go func() {
+		defer handler.Wg.Done()
+		logger.LogTasks(handler.TaskChan)
+	}()
 
 	// Middleware
-	app.Use(handler.LoggingMiddleware)
-	app.Use("/tasks", handler.AuthMiddleware)
+	app.Use(middleware.LoggingMiddleware)
+	app.Use("/tasks", middleware.RateLimiter(config.MaxRequest, config.ExpirationTime, config.IgnoreIp))
+	app.Use("/tasks", middleware.AuthMiddleware(config.AutKey, config.AutPass))
 
 	// Routes
 	app.Get("/tasks", handler.GetTasks)
@@ -34,9 +37,9 @@ func Run(serviceIp, servicePort string) {
 
 	// Graceful shutdown
 	defer func() {
-		// close(taskChan)
-		// handler.Wg.Wait()
+		close(handler.TaskChan)
+		handler.Wg.Wait()
 	}()
 
-	log.Fatal(app.Listen(fmt.Sprintf("%s:%s", serviceIp, servicePort)))
+	log.Fatal(app.Listen(fmt.Sprintf("%s:%v", config.ServiceIp, config.ServicePort)))
 }
